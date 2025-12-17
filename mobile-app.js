@@ -15,6 +15,7 @@ let settings = {
 document.addEventListener('DOMContentLoaded', function() {
     loadSettings();
     loadPDFs();
+    setupCustomSelect();
     loadQuiz();
     setupNavigation();
     setupSettings(); // ئەمە هێشتا کار دەکات
@@ -48,8 +49,8 @@ function applySettings() {
     document.getElementById('sound-toggle').checked = settings.sound;
     
     // Quiz Settings
-    document.getElementById('questions-count').value = settings.questionsCount;
-    document.getElementById('auto-next-time').value = settings.autoNextTime;
+    // ئەو دوو لاینە کۆنە سڕاونەتەوە
+    // Custom dropdown values will be loaded in setupSettingsDropdowns()
 }
 
 function setupSettings() {
@@ -92,17 +93,7 @@ function setupSettings() {
     });
     
     // Quiz Settings
-    document.getElementById('questions-count').addEventListener('change', (e) => {
-        settings.questionsCount = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
-        saveSettings();
-        showNotification('✓ ژمارەی پرسیار گۆڕدرا', 'success');
-    });
-    
-    document.getElementById('auto-next-time').addEventListener('change', (e) => {
-        settings.autoNextTime = parseInt(e.target.value);
-        saveSettings();
-        showNotification('✓ کاتی ئۆتۆماتیک گۆڕدرا', 'success');
-    });
+    setupSettingsDropdowns();
     
     // Clear Data
     document.getElementById('clear-data-btn').addEventListener('click', () => {
@@ -120,6 +111,74 @@ function setupSettings() {
             applySettings();
             updateStatsDisplay();
             showNotification('🗑️ هەموو داتاکان سڕانەوە', 'success');
+        }
+    });
+}
+
+// ←←← لێرە ئەم فانکشنە نوێیە زیاد بکە ←←←
+function setupSettingsDropdowns() {
+    const questionsSelect = document.getElementById('questions-count-select');
+    const autoNextSelect = document.getElementById('auto-next-select');
+    
+    // ئەگەر elements نەدۆزرانەوە، return بکە
+    if (!questionsSelect || !autoNextSelect) {
+        console.log('Settings dropdowns not found');
+        return;
+    }
+    
+    // Questions Count setup
+    const questionsOptions = questionsSelect.querySelectorAll('.option-setting');
+    
+    questionsSelect.querySelector('.select-trigger-setting').addEventListener('click', () => {
+        questionsSelect.classList.toggle('open');
+        autoNextSelect.classList.remove('open');
+    });
+    
+    questionsOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.querySelector('span').textContent;
+            
+            questionsSelect.querySelector('.select-value').textContent = text;
+            questionsOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            
+            settings.questionsCount = value === 'all' ? 'all' : parseInt(value);
+            saveSettings();
+            showNotification('✓ ژمارەی پرسیار گۆڕدرا', 'success');
+            questionsSelect.classList.remove('open');
+        });
+    });
+    
+    // Auto Next Time setup
+    const autoNextOptions = autoNextSelect.querySelectorAll('.option-setting');
+    
+    autoNextSelect.querySelector('.select-trigger-setting').addEventListener('click', () => {
+        autoNextSelect.classList.toggle('open');
+        questionsSelect.classList.remove('open');
+    });
+    
+    autoNextOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.querySelector('span').textContent;
+            
+            autoNextSelect.querySelector('.select-value').textContent = text;
+            autoNextOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            
+            settings.autoNextTime = parseInt(value);
+            saveSettings();
+            showNotification('✓ کاتی ئۆتۆماتیک گۆڕدرا', 'success');
+            autoNextSelect.classList.remove('open');
+        });
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-select-setting')) {
+            questionsSelect.classList.remove('open');
+            autoNextSelect.classList.remove('open');
         }
     });
 }
@@ -683,17 +742,6 @@ function filterPDFs() {
         card.style.display = match ? 'flex' : 'none';
     });
 }
-
-// لە فانکشنی DOMContentLoaded، ئەمە زیاد بکە:
-document.addEventListener('DOMContentLoaded', function() {
-    loadSettings();
-    loadPDFs();
-    loadQuiz();
-    setupNavigation();
-    setupSettings();
-    setupCustomSelect(); // ← زیادکراوە
-    loadStats();
-});
 
 // فانکشنی loadPDFs ساکارەوە - دوو لایسەنەرەکە بسڕەوە:
 function loadPDFs() {
