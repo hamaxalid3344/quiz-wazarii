@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4F46E5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>پرسیارە وەزارییەکان</title>
+    <link rel="stylesheet" href="mobile-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Top Bar -->
+<header class="top-bar">
+    <h1 class="app-title" style="text-align: center; width: 100%;">پرسیارە وەزارییەکان</h1>
+</header>
+
+        <!-- Overlay -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- PDF Screen -->
+            <div class="screen active" id="pdf-screen">
+                <!-- Filter Chips - Custom Dropdown -->
+<div class="filter-chips">
+    <!-- Year Filter -->
+    <div class="custom-select" id="year-filter">
+        <div class="select-trigger">
+            <i class="fas fa-calendar"></i>
+            <span class="select-text">هەموو ساڵەکان</span>
+            <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+        <div class="select-options">
+            <div class="select-option active" data-value="">هەموو ساڵەکان</div>
+            <div class="select-option" data-value="2024">٢٠٢٤</div>
+            <div class="select-option" data-value="2023">٢٠٢٣</div>
+            <div class="select-option" data-value="2022">٢٠٢٢</div>
+        </div>
+    </div>
+    
+    <!-- Term Filter -->
+    <div class="custom-select" id="term-filter">
+        <div class="select-trigger">
+            <i class="fas fa-book"></i>
+            <span class="select-text">هەموو خولەکان</span>
+            <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+        <div class="select-options">
+            <div class="select-option active" data-value="">هەموو خولەکان</div>
+            <div class="select-option" data-value="یەکەم">یەکەم</div>
+            <div class="select-option" data-value="دووەم">دووەم</div>
+            <div class="select-option" data-value="بەرایی">بەرایی</div>
+        </div>
+    </div>
+</div>
+
+                <div class="cards-container" id="pdf-cards"></div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div class="screen" id="quiz-screen">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">٠/١٠</div>
+                </div>
+                <div class="question-container" id="question-container"></div>
+                <div class="action-buttons">
+                    <button class="action-btn secondary" id="show-answer-btn">
+                        <i class="fas fa-eye"></i> وەڵامی ڕاست
+                    </button>
+                    <button class="action-btn primary" id="next-question-btn">
+                        دواتر <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Screen -->
+            <div class="screen" id="stats-screen">
+                <div class="stats-container">
+                    <div class="stat-card correct">
+                        <i class="fas fa-check-circle"></i>
+                        <h2 id="correct-stat">٠</h2>
+                        <p>وەڵامی ڕاست</p>
+                    </div>
+                    <div class="stat-card wrong">
+                        <i class="fas fa-times-circle"></i>
+                        <h2 id="wrong-stat">٠</h2>
+                        <p>وەڵامی هەڵە</p>
+                    </div>
+                    <div class="stat-card total">
+                        <i class="fas fa-list-check"></i>
+                        <h2 id="total-stat">٠</h2>
+                        <p>کۆی گشتی</p>
+                    </div>
+                </div>
+                <button class="reset-btn" id="reset-btn">
+                    <i class="fas fa-rotate-right"></i> دەستپێکردنەوە
+                </button>
+            </div>
+
+            <!-- Settings Screen -->
+            <div class="screen" id="settings-screen">
+                <div class="settings-container">
+                    
+                    <!-- Dark Mode -->
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div>
+                                <i class="fas fa-moon"></i>
+                                <span>دۆخی تاریک</span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="dark-mode-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Sound Effects -->
+                    <div class="setting-card">
+                        <div class="setting-header">
+                            <div>
+                                <i class="fas fa-volume-high"></i>
+                                <span>دەنگی ئاگادارکردنەوە</span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="sound-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Theme Color -->
+                    <div class="setting-card">
+                        <div class="setting-title">
+                            <i class="fas fa-palette"></i>
+                            <span>ڕەنگی سەرەکی</span>
+                        </div>
+                        <div class="color-options">
+                            <button class="color-btn active" data-color="#4F46E5" style="background: #4F46E5;"></button>
+                            <button class="color-btn" data-color="#10B981" style="background: #10B981;"></button>
+                            <button class="color-btn" data-color="#EF4444" style="background: #EF4444;"></button>
+                            <button class="color-btn" data-color="#F59E0B" style="background: #F59E0B;"></button>
+                            <button class="color-btn" data-color="#8B5CF6" style="background: #8B5CF6;"></button>
+                            <button class="color-btn" data-color="#EC4899" style="background: #EC4899;"></button>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Settings -->
+                    <div class="setting-card">
+                        <div class="setting-title">
+                            <i class="fas fa-sliders"></i>
+                            <span>ڕێکخستنی کوێز</span>
+                        </div>
+                        <div class="quiz-settings">
+                            <label>ژمارەی پرسیار:</label>
+                            <select id="questions-count" class="setting-select">
+                                <option value="5">٥ پرسیار</option>
+                                <option value="10" selected>١٠ پرسیار</option>
+                                <option value="20">٢٠ پرسیار</option>
+                                <option value="all">هەموو پرسیارەکان</option>
+                            </select>
+                            
+                            <label>کاتی چوونە پرسیاری داهاتوو:</label>
+                            <select id="auto-next-time" class="setting-select">
+                                <option value="1000">١ چرکە</option>
+                                <option value="1500" selected>١.٥ چرکە</option>
+                                <option value="2000">٢ چرکە</option>
+                                <option value="3000">٣ چرکە</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Clear Data -->
+                    <div class="setting-card">
+                        <div class="setting-title danger">
+                            <i class="fas fa-trash"></i>
+                            <span>سڕینەوەی داتا</span>
+                        </div>
+                        <button class="danger-btn" id="clear-data-btn">
+                            <i class="fas fa-warning"></i> سڕینەوەی هەموو داتاکان
+                        </button>
+                    </div>
+
+                    <!-- About -->
+                    <div class="setting-card about-card">
+                        <div class="about-content">
+                            <i class="fas fa-graduation-cap about-icon"></i>
+                            <h3>پرسیارە وەزارییەکانی دوانزە</h3>
+                            <p class="version">وێرژن 1.0.0</p>
+                            <p class="description">دروستکراوە بە 💚 بۆ خوێندکارانی کوردستان</p>
+                            <div class="social-links">
+                                <a href="#" class="social-btn"><i class="fab fa-facebook"></i></a>
+                                <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-btn"><i class="fab fa-telegram"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="pdf">
+                <i class="fas fa-file-pdf"></i>
+                <span>فایلەکان</span>
+            </button>
+            <button class="nav-item" data-screen="quiz">
+                <i class="fas fa-brain"></i>
+                <span>کوێز</span>
+            </button>
+            <button class="nav-item" data-screen="settings">
+                <i class="fas fa-cog"></i>
+                <span>ڕێکخستن</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="data.js"></script>
+    <script src="mobile-app.js"></script>
+</body>
+</html>

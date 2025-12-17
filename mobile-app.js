@@ -1,0 +1,729 @@
+// ========== Initialize ==========
+let currentQuestion = 0;
+let userAnswers = [];
+let quizData = [];
+let stats = { correct: 0, wrong: 0, total: 0 };
+let answeredQuestions = new Set();
+let settings = {
+    darkMode: false,
+    sound: true,
+    themeColor: '#4F46E5',
+    questionsCount: 10,
+    autoNextTime: 1500
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    loadPDFs();
+    loadQuiz();
+    setupNavigation();
+    setupSettings(); // ئەمە هێشتا کار دەکات
+    loadStats();
+});
+
+// ========== Settings ==========
+function loadSettings() {
+    const saved = localStorage.getItem('app-settings');
+    if (saved) {
+        settings = JSON.parse(saved);
+    }
+    applySettings();
+}
+
+function saveSettings() {
+    localStorage.setItem('app-settings', JSON.stringify(settings));
+}
+
+function applySettings() {
+    // Dark Mode
+    if (settings.darkMode) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-toggle').checked = true;
+    }
+    
+    // Theme Color
+    document.documentElement.style.setProperty('--primary', settings.themeColor);
+    
+    // Sound
+    document.getElementById('sound-toggle').checked = settings.sound;
+    
+    // Quiz Settings
+    document.getElementById('questions-count').value = settings.questionsCount;
+    document.getElementById('auto-next-time').value = settings.autoNextTime;
+}
+
+function setupSettings() {
+    // Dark Mode Toggle
+    document.getElementById('dark-mode-toggle').addEventListener('change', (e) => {
+        settings.darkMode = e.target.checked;
+        document.body.classList.toggle('dark-mode', e.target.checked);
+        saveSettings();
+        showNotification(e.target.checked ? '🌙 دۆخی تاریک چالاککرا' : '☀️ دۆخی ڕۆشنایی چالاککرا', 'success');
+    });
+    
+    // Sound Toggle
+    document.getElementById('sound-toggle').addEventListener('change', (e) => {
+        settings.sound = e.target.checked;
+        saveSettings();
+        if (e.target.checked) {
+            playSound('success');
+        }
+        showNotification(e.target.checked ? '🔊 دەنگ چالاککرا' : '🔇 دەنگ ناچالاککرا', 'success');
+    });
+    
+    // Theme Color
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.getAttribute('data-color');
+            settings.themeColor = color;
+            
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.documentElement.style.setProperty('--primary', color);
+            
+            saveSettings();
+            showNotification('🎨 ڕەنگ گۆڕدرا', 'success');
+        });
+        
+        if (btn.getAttribute('data-color') === settings.themeColor) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Quiz Settings
+    document.getElementById('questions-count').addEventListener('change', (e) => {
+        settings.questionsCount = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+        saveSettings();
+        showNotification('✓ ژمارەی پرسیار گۆڕدرا', 'success');
+    });
+    
+    document.getElementById('auto-next-time').addEventListener('change', (e) => {
+        settings.autoNextTime = parseInt(e.target.value);
+        saveSettings();
+        showNotification('✓ کاتی ئۆتۆماتیک گۆڕدرا', 'success');
+    });
+    
+    // Clear Data
+    document.getElementById('clear-data-btn').addEventListener('click', () => {
+        if (confirm('دڵنیایت دەتەوێت هەموو داتاکان بسڕیتەوە؟\n(ئامار، ڕێکخستنەکان، مێژوو)')) {
+            localStorage.clear();
+            stats = { correct: 0, wrong: 0, total: 0 };
+            answeredQuestions.clear();
+            settings = {
+                darkMode: false,
+                sound: true,
+                themeColor: '#4F46E5',
+                questionsCount: 10,
+                autoNextTime: 1500
+            };
+            applySettings();
+            updateStatsDisplay();
+            showNotification('🗑️ هەموو داتاکان سڕانەوە', 'success');
+        }
+    });
+}
+
+// ========== Sound Effects ==========
+function playSound(type) {
+    if (!settings.sound) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    if (type === 'success') {
+        oscillator.frequency.value = 800;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    } else if (type === 'error') {
+        oscillator.frequency.value = 200;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    }
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+}
+
+// ========== Navigation ==========
+function setupNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const screens = document.querySelectorAll('.screen');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const targetScreen = item.getAttribute('data-screen');
+            switchScreen(targetScreen);
+        });
+    });
+}
+
+function switchScreen(targetScreen) {
+    const navItems = document.querySelectorAll('.nav-item');
+    const screens = document.querySelectorAll('.screen');
+    
+    navItems.forEach(nav => nav.classList.remove('active'));
+    screens.forEach(screen => screen.classList.remove('active'));
+    
+    document.querySelector(`.nav-item[data-screen="${targetScreen}"]`)?.classList.add('active');
+    document.getElementById(`${targetScreen}-screen`).classList.add('active');
+    
+    if (targetScreen === 'stats') {
+        updateStatsDisplay();
+    }
+}
+
+function setupMenu() {
+    const menuBtn = document.getElementById('menu-btn');
+    const statsBtn = document.getElementById('stats-btn');
+    const sideMenu = document.getElementById('side-menu');
+    const overlay = document.getElementById('overlay');
+    
+    menuBtn.addEventListener('click', () => {
+        sideMenu.classList.add('active');
+        overlay.classList.add('active');
+    });
+    
+    statsBtn.addEventListener('click', () => {
+        switchScreen('stats');
+    });
+    
+    overlay.addEventListener('click', closeSideMenu);
+}
+
+function closeSideMenu() {
+    document.getElementById('side-menu').classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+// ========== Load PDFs ==========
+function loadPDFs() {
+    const container = document.getElementById('pdf-cards');
+    container.innerHTML = '';
+    
+    pdfFiles.forEach(pdf => {
+        const card = document.createElement('div');
+        card.className = 'pdf-card';
+        card.setAttribute('data-year', pdf.year);
+        card.setAttribute('data-term', pdf.term);
+        
+        card.innerHTML = `
+            <div class="pdf-card-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="pdf-card-content">
+                <div class="pdf-card-title">${pdf.title}</div>
+                <div class="pdf-card-meta">
+                    <span><i class="fas fa-calendar"></i> ${pdf.year}</span>
+                    <span><i class="fas fa-book"></i> ${pdf.term}</span>
+                </div>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => window.open(pdf.url, '_blank'));
+        container.appendChild(card);
+    });
+    
+    document.getElementById('year-select').addEventListener('change', filterPDFs);
+    document.getElementById('term-select').addEventListener('change', filterPDFs);
+}
+
+function filterPDFs() {
+    const year = document.getElementById('year-select').value;
+    const term = document.getElementById('term-select').value;
+    const cards = document.querySelectorAll('.pdf-card');
+    
+    cards.forEach(card => {
+        const cardYear = card.getAttribute('data-year');
+        const cardTerm = card.getAttribute('data-term');
+        
+        const match = (!year || cardYear === year) && (!term || cardTerm === term);
+        card.style.display = match ? 'flex' : 'none';
+    });
+}
+
+// ========== Load Quiz ==========
+function loadQuiz() {
+    let allQuestions = [...quizQuestions];
+    
+    // Filter by count
+    if (settings.questionsCount !== 'all') {
+        allQuestions = allQuestions.slice(0, settings.questionsCount);
+    }
+    
+    quizData = allQuestions;
+    currentQuestion = 0;
+    userAnswers = [];
+    displayQuestion();
+    
+    document.getElementById('show-answer-btn').addEventListener('click', showAnswer);
+    document.getElementById('next-question-btn').addEventListener('click', nextQuestion);
+}
+
+function displayQuestion() {
+    const container = document.getElementById('question-container');
+    const question = quizData[currentQuestion];
+    
+    if (!question) return;
+    
+    const optionsHTML = question.options.map((option, i) => `
+        <div class="option-item" data-index="${i}">
+            <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+            <span>${option}</span>
+        </div>
+    `).join('');
+    
+    container.innerHTML = `
+        <div class="question-header">
+            ${currentQuestion + 1}. ${question.question}
+        </div>
+        <div class="options-list">
+            ${optionsHTML}
+        </div>
+    `;
+    
+    const options = container.querySelectorAll('.option-item');
+    options.forEach(option => {
+        option.addEventListener('click', () => selectOption(option, options, question));
+    });
+    
+    updateProgress();
+}
+
+// تەنها ئەم فانکشنانە بگۆڕە لە فایلی mobile-app.js
+
+function selectOption(selected, allOptions, question) {
+    if (answeredQuestions.has(currentQuestion)) {
+        return;
+    }
+    
+    allOptions.forEach(opt => opt.classList.remove('selected'));
+    selected.classList.add('selected');
+    
+    const selectedIndex = parseInt(selected.getAttribute('data-index'));
+    userAnswers[currentQuestion] = selectedIndex;
+    
+    const isCorrect = selectedIndex === question.correct;
+    
+    setTimeout(() => {
+        if (isCorrect) {
+            selected.classList.add('correct');
+            stats.correct++;
+            playSound('success');
+            showNotification('✅ وەڵامی ڕاست!', 'success');
+        } else {
+            selected.classList.add('wrong');
+            allOptions[question.correct].classList.add('correct');
+            stats.wrong++;
+            playSound('error');
+            showNotification('❌ وەڵامی هەڵە!', 'error');
+        }
+        
+        stats.total++;
+        answeredQuestions.add(currentQuestion);
+        saveStats();
+        updateStatsDisplay();
+        
+        setTimeout(() => {
+            if (currentQuestion < quizData.length - 1) {
+                nextQuestion();
+            } else {
+                // کاتێک تەواو بوو، پێشتر Review Screen پیشان بدە
+                showReviewScreen();
+            }
+        }, settings.autoNextTime);
+        
+    }, 300);
+}
+
+// ========== Review Screen (پیشاندانی وەڵامە ڕاستەکان) ==========
+function showReviewScreen() {
+    const container = document.getElementById('question-container');
+    
+    let reviewHTML = `
+        <div class="review-header">
+            <h2 style="font-size: 1.3rem; color: var(--primary); margin-bottom: 8px;">
+                <i class="fas fa-clipboard-check"></i> پێداچوونەوەی وەڵامەکان
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                سەرجەم پرسیار و وەڵامە ڕاستەکان
+            </p>
+        </div>
+        <div class="review-list">
+    `;
+    
+    quizData.forEach((q, index) => {
+        const userAnswer = userAnswers[index];
+        const isCorrect = userAnswer === q.correct;
+        const icon = isCorrect ? '✅' : '❌';
+        const statusClass = isCorrect ? 'correct-item' : 'wrong-item';
+        
+        reviewHTML += `
+            <div class="review-item ${statusClass}">
+                <div class="review-question">
+                    <span class="review-icon">${icon}</span>
+                    <span class="review-number">${index + 1}.</span>
+                    <span>${q.question}</span>
+                </div>
+                <div class="review-answer correct-answer">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>وەڵامی ڕاست:</strong> ${q.options[q.correct]}
+                </div>
+                ${!isCorrect && userAnswer !== undefined ? `
+                    <div class="review-answer wrong-answer">
+                        <i class="fas fa-times-circle"></i>
+                        <strong>تۆ هەڵبژاردت:</strong> ${q.options[userAnswer]}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    reviewHTML += `
+        </div>
+        <div class="review-actions">
+            <button onclick="showFinalResults()" class="action-btn primary" style="width: 100%;">
+                بینینی ئەنجامی کۆتایی <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+    `;
+    
+    container.innerHTML = reviewHTML;
+    container.style.maxHeight = 'calc(100vh - 300px)';
+    container.style.overflowY = 'auto';
+    
+    // دوگمەکانی خوارەوە بشارەوە
+    document.querySelector('.action-buttons').style.display = 'none';
+}
+
+function showFinalResults() {
+    const percentage = ((stats.correct / stats.total) * 100).toFixed(0);
+    let message = '';
+    let emoji = '';
+    
+    if (percentage >= 90) {
+        message = 'نایاب! تۆ زۆر بەهرەمەندی 🌟';
+        emoji = '🏆';
+    } else if (percentage >= 70) {
+        message = 'زۆر باش! بەردەوام بە 💪';
+        emoji = '🎉';
+    } else if (percentage >= 50) {
+        message = 'باش بوو، بەڵام دەتوانیت باشتر بیت 📚';
+        emoji = '👍';
+    } else {
+        message = 'پێویستە زیاتر مەشق بکەیت 📖';
+        emoji = '💪';
+    }
+    
+    const container = document.getElementById('question-container');
+    container.style.maxHeight = 'none';
+    container.style.overflowY = 'visible';
+    
+    const resultHTML = `
+        <div style="text-align: center; padding: 30px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">${emoji}</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 16px; color: var(--primary);">تەواوبوو!</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 24px;">${message}</p>
+            <div style="font-size: 3rem; font-weight: bold; color: var(--secondary); margin-bottom: 12px;">${percentage}%</div>
+            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 24px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--secondary);">✓ ${stats.correct}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">ڕاست</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--danger);">✗ ${stats.wrong}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">هەڵە</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button onclick="showReviewScreen()" style="flex: 1; padding: 14px; background: var(--warning); color: white; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer;">
+                    <i class="fas fa-eye"></i> وەڵامەکان
+                </button>
+                <button onclick="restartQuiz()" style="flex: 1; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer;">
+                    <i class="fas fa-rotate-right"></i> دووبارە
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = resultHTML;
+    document.querySelector('.action-buttons').style.display = 'none';
+    playSound('success');
+}
+
+function restartQuiz() {
+    answeredQuestions.clear();
+    userAnswers = [];
+    currentQuestion = 0;
+    document.querySelector('.action-buttons').style.display = 'flex';
+    loadQuiz();
+}
+
+
+function showAnswer() {
+    const question = quizData[currentQuestion];
+    const options = document.querySelectorAll('.option-item');
+    
+    if (!answeredQuestions.has(currentQuestion)) {
+        options[question.correct].classList.add('correct');
+        showNotification('💡 وەڵامی ڕاست پیشاندرا', 'info');
+    }
+}
+
+function nextQuestion() {
+    if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        displayQuestion();
+    }
+}
+
+function showFinalResults() {
+    const percentage = ((stats.correct / stats.total) * 100).toFixed(0);
+    let message = '';
+    let emoji = '';
+    
+    if (percentage >= 90) {
+        message = 'نایاب! تۆ زۆر بەهرەمەندی 🌟';
+        emoji = '🏆';
+    } else if (percentage >= 70) {
+        message = 'زۆر باش! بەردەوام بە 💪';
+        emoji = '🎉';
+    } else if (percentage >= 50) {
+        message = 'باش بوو، بەڵام دەتوانیت باشتر بیت 📚';
+        emoji = '👍';
+    } else {
+        message = 'پێویستە زیاتر مەشق بکەیت 📖';
+        emoji = '💪';
+    }
+    
+    const resultHTML = `
+        <div style="text-align: center; padding: 30px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">${emoji}</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 16px; color: var(--primary);">تەواوبوو!</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 24px;">${message}</p>
+            <div style="font-size: 3rem; font-weight: bold; color: var(--secondary); margin-bottom: 12px;">${percentage}%</div>
+            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 24px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--secondary);">✓ ${stats.correct}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">ڕاست</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--danger);">✗ ${stats.wrong}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">هەڵە</div>
+                </div>
+            </div>
+            <button onclick="restartQuiz()" style="margin-top: 30px; padding: 14px 32px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer;">
+                دەستپێکردنەوە <i class="fas fa-rotate-right"></i>
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('question-container').innerHTML = resultHTML;
+    playSound('success');
+}
+
+function restartQuiz() {
+    answeredQuestions.clear();
+    userAnswers = [];
+    currentQuestion = 0;
+    loadQuiz();
+}
+
+function updateProgress() {
+    const progress = ((currentQuestion + 1) / quizData.length) * 100;
+    document.getElementById('progress-fill').style.width = `${progress}%`;
+    document.getElementById('progress-text').textContent = `${currentQuestion + 1}/${quizData.length}`;
+}
+
+// ========== Stats ==========
+function loadStats() {
+    const saved = localStorage.getItem('quiz-stats');
+    if (saved) {
+        stats = JSON.parse(saved);
+    }
+    updateStatsDisplay();
+}
+
+function saveStats() {
+    localStorage.setItem('quiz-stats', JSON.stringify(stats));
+}
+
+function updateStatsDisplay() {
+    document.getElementById('correct-stat').textContent = stats.correct;
+    document.getElementById('wrong-stat').textContent = stats.wrong;
+    document.getElementById('total-stat').textContent = stats.total;
+}
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    if (confirm('دڵنیایت دەتەوێت هەموو ئامارەکان بسڕیتەوە؟')) {
+        stats = { correct: 0, wrong: 0, total: 0 };
+        saveStats();
+        updateStatsDisplay();
+        showNotification('✅ ئامارەکان سڕانەوە', 'success');
+    }
+});
+
+// ========== Notification ==========
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 50%;
+        transform: translateX(50%);
+        background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#4F46E5'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        z-index: 9999;
+        animation: slideDown 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-width: 90%;
+        text-align: center;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from { opacity: 0; transform: translate(50%, -20px); }
+        to { opacity: 1; transform: translate(50%, 0); }
+    }
+    @keyframes slideUp {
+        from { opacity: 1; transform: translate(50%, 0); }
+        to { opacity: 0; transform: translate(50%, -20px); }
+    }
+`;
+document.head.appendChild(style);
+
+
+// زیادکردنی ئەم فانکشنە لە فایلی mobile-app.js
+
+// ========== Custom Select Dropdown ==========
+function setupCustomSelect() {
+    const customSelects = document.querySelectorAll('.custom-select');
+    
+    customSelects.forEach(select => {
+        const trigger = select.querySelector('.select-trigger');
+        const options = select.querySelectorAll('.select-option');
+        const textElement = select.querySelector('.select-text');
+        
+        // Open/Close dropdown
+        trigger.addEventListener('click', () => {
+            // Close other dropdowns
+            customSelects.forEach(s => {
+                if (s !== select) s.classList.remove('open');
+            });
+            
+            select.classList.toggle('open');
+        });
+        
+        // Select option
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                const text = option.textContent;
+                
+                // Update text
+                textElement.textContent = text;
+                
+                // Update active state
+                options.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                // Close dropdown
+                select.classList.remove('open');
+                
+                // Trigger filter
+                filterPDFs();
+            });
+        });
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-select')) {
+            customSelects.forEach(select => select.classList.remove('open'));
+        }
+    });
+}
+
+// گۆڕینی فانکشنی filterPDFs
+function filterPDFs() {
+    const yearSelect = document.querySelector('#year-filter .select-option.active');
+    const termSelect = document.querySelector('#term-filter .select-option.active');
+    
+    const yearValue = yearSelect ? yearSelect.getAttribute('data-value') : '';
+    const termValue = termSelect ? termSelect.getAttribute('data-value') : '';
+    
+    const cards = document.querySelectorAll('.pdf-card');
+    
+    cards.forEach(card => {
+        const cardYear = card.getAttribute('data-year');
+        const cardTerm = card.getAttribute('data-term');
+        
+        const match = (!yearValue || cardYear === yearValue) && 
+                      (!termValue || cardTerm === termValue);
+        
+        card.style.display = match ? 'flex' : 'none';
+    });
+}
+
+// لە فانکشنی DOMContentLoaded، ئەمە زیاد بکە:
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    loadPDFs();
+    loadQuiz();
+    setupNavigation();
+    setupSettings();
+    setupCustomSelect(); // ← زیادکراوە
+    loadStats();
+});
+
+// فانکشنی loadPDFs ساکارەوە - دوو لایسەنەرەکە بسڕەوە:
+function loadPDFs() {
+    const container = document.getElementById('pdf-cards');
+    container.innerHTML = '';
+    
+    pdfFiles.forEach(pdf => {
+        const card = document.createElement('div');
+        card.className = 'pdf-card';
+        card.setAttribute('data-year', pdf.year);
+        card.setAttribute('data-term', pdf.term);
+        
+        card.innerHTML = `
+            <div class="pdf-card-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="pdf-card-content">
+                <div class="pdf-card-title">${pdf.title}</div>
+                <div class="pdf-card-meta">
+                    <span><i class="fas fa-calendar"></i> ${pdf.year}</span>
+                    <span><i class="fas fa-book"></i> ${pdf.term}</span>
+                </div>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => window.open(pdf.url, '_blank'));
+        container.appendChild(card);
+    });
+    
+    // ئەم دوو لاینە بسڕەوە:
+    // document.getElementById('year-select').addEventListener('change', filterPDFs);
+    // document.getElementById('term-select').addEventListener('change', filterPDFs);
+}
