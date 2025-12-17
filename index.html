@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#4F46E5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>پرسیارە وەزارییەکان</title>
     <title>پرسیارە وەزارییەکان</title>
     <link rel="stylesheet" href="mobile-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,6 +17,44 @@
     
     <!-- App Container -->
     <div class="app-container">
+
+        <body>
+    
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1 class="splash-title">پرسیارە وەزارییەکان</h1>
+            <p class="splash-subtitle">بۆ خوێندکارانی کوردستان</p>
+            <div class="splash-loader">
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="install-prompt">
+        <div class="install-prompt-content">
+            <button class="close-prompt" id="close-prompt">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="install-icon">
+                <i class="fas fa-mobile-screen"></i>
+            </div>
+            <h3>دابگرە لە مۆبایلەکەتدا</h3>
+            <p>ئەم ئەپەکە زیاد بکە بۆ Home Screen بۆ ئەزموونێکی باشتر</p>
+            <button class="install-btn" id="install-btn">
+                <i class="fas fa-download"></i>
+                دامەزراندن
+            </button>
+            <button class="later-btn" id="later-btn">دواتر</button>
+        </div>
+    </div>
+    
         
         <!-- Top Bar -->
 <header class="top-bar">
@@ -159,7 +200,7 @@
 <div class="setting-card">
     <div class="setting-title">
         <i class="fas fa-sliders"></i>
-        <span>ڕێکخستنی کوێز</span>
+        <span>ڕێکخستنی کـویـز</span>
     </div>
     <div class="quiz-settings">
         
@@ -237,7 +278,7 @@
                             <span>سڕینەوەی داتا</span>
                         </div>
                         <button class="danger-btn" id="clear-data-btn">
-                            <i class="fas fa-warning"></i> سڕینەوەی هەموو داتاکان
+                            <i class="fas fa-warning"></i> <span style="font-family: UniSIRWAN Qabas">سڕینەوەی هەموو داتاکان</span>
                         </button>
                     </div>
 
@@ -265,15 +306,15 @@
         <nav class="bottom-nav">
             <button class="nav-item active" data-screen="pdf">
                 <i class="fas fa-file-pdf"></i>
-                <span>فایلەکان</span>
+                <span style="font-family: UniSIRWAN Qabas">وەزارییەکان</span>
             </button>
             <button class="nav-item" data-screen="quiz">
                 <i class="fas fa-brain"></i>
-                <span>کوێز</span>
+                <span style="font-family: UniSIRWAN Qabas">کـویـز</span>
             </button>
             <button class="nav-item" data-screen="settings">
                 <i class="fas fa-cog"></i>
-                <span>ڕێکخستن</span>
+                <span style="font-family: UniSIRWAN Qabas">ڕێکخستن</span>
             </button>
         </nav>
 

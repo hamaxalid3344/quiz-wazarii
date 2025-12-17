@@ -13,6 +13,8 @@ let settings = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Show splash screen
+    showSplashScreen();
     loadSettings();
     loadPDFs();
     setupCustomSelect();
@@ -20,7 +22,219 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNavigation();
     setupSettings(); // ئەمە هێشتا کار دەکات
     loadStats();
+
+     // Setup install prompt
+    setupInstallPrompt();
 });
+
+// ========== PWA Install Prompt ==========
+let deferredPrompt;
+
+// ========== Splash Screen ==========
+function showSplashScreen() {
+    const splash = document.getElementById('splash-screen');
+    
+    setTimeout(() => {
+        splash.style.display = 'none';
+        
+        // Show install prompt after splash
+        setTimeout(() => {
+            checkInstallPrompt();
+        }, 500);
+    }, 3000); // 3 چرکە
+}
+
+// ========== Install Prompt ==========
+function setupInstallPrompt() {
+    const installPrompt = document.getElementById('install-prompt');
+    const installBtn = document.getElementById('install-btn');
+    const laterBtn = document.getElementById('later-btn');
+    const closeBtn = document.getElementById('close-prompt');
+    
+    // Capture install event
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log('Install prompt ready');
+    });
+    
+    // Install button
+    installBtn.addEventListener('click', async () => {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        if (isAndroid && deferredPrompt) {
+            // Android - Native prompt
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                showNotification('✓ ئەپەکە دامەزرا', 'success');
+            } else {
+                showAndroidInstructions();
+            }
+            
+            deferredPrompt = null;
+            hideInstallPrompt();
+        } else if (isAndroid && !deferredPrompt) {
+            // Android but no prompt
+            showAndroidInstructions();
+            hideInstallPrompt();
+        } else if (isIOS) {
+            // iOS - Instructions
+            hideInstallPrompt();
+            showIOSInstructions();
+        } else {
+            // Desktop
+            showNotification('تکایە لە مۆبایلەکەتەوە بیکە', 'info');
+            hideInstallPrompt();
+        }
+    });
+    
+    // Later button
+    laterBtn.addEventListener('click', () => {
+        hideInstallPrompt();
+        localStorage.setItem('install-prompt-shown', Date.now());
+    });
+    
+    // Close button
+    closeBtn.addEventListener('click', () => {
+        hideInstallPrompt();
+        localStorage.setItem('install-prompt-shown', Date.now());
+    });
+}
+
+// ========== Android Instructions ==========
+function showAndroidInstructions() {
+    const overlay = document.createElement('div');
+    overlay.className = 'install-instructions android-instructions';
+    overlay.innerHTML = `
+        <div class="instruction-content">
+            <button class="close-instruction" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="device-icon">
+                <i class="fab fa-android"></i>
+            </div>
+            <h3>چۆن دایبمەزرێنم لە ئەندرۆید؟</h3>
+            <div class="instruction-steps">
+                <div class="instruction-step">
+                    <div class="step-number">١</div>
+                    <div class="step-text">
+                        <p>لە مێنیوی بڕاوزەر (⋮) کلیک بکە</p>
+                        <i class="fas fa-ellipsis-v step-icon"></i>
+                    </div>
+                </div>
+                <div class="instruction-step">
+                    <div class="step-number">٢</div>
+                    <div class="step-text">
+                        <p>هەڵبژێرە <strong>"Install app"</strong> یان <strong>"Add to Home screen"</strong></p>
+                        <i class="fas fa-download step-icon"></i>
+                    </div>
+                </div>
+                <div class="instruction-step">
+                    <div class="step-number">٣</div>
+                    <div class="step-text">
+                        <p>کلیک لە <strong>"Install"</strong> بکە</p>
+                        <i class="fas fa-check-circle step-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <button class="got-it-btn" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-thumbs-up"></i>
+                تێگەیشتم
+            </button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// ========== iOS Instructions ==========
+function showIOSInstructions() {
+    const overlay = document.createElement('div');
+    overlay.className = 'install-instructions ios-instructions';
+    overlay.innerHTML = `
+        <div class="instruction-content">
+            <button class="close-instruction" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="device-icon">
+                <i class="fab fa-apple"></i>
+            </div>
+            <h3>چۆن دایبمەزرێنم لە iOS؟</h3>
+            <div class="instruction-steps">
+                <div class="instruction-step">
+                    <div class="step-number">١</div>
+                    <div class="step-text">
+                        <p>کلیک لە دوگمەی <strong>Share</strong> بکە (لە خوارەوە)</p>
+                        <i class="fas fa-share-from-square step-icon"></i>
+                    </div>
+                </div>
+                <div class="instruction-step">
+                    <div class="step-number">٢</div>
+                    <div class="step-text">
+                        <p>هەڵبژێرە <strong>"Add to Home Screen"</strong></p>
+                        <i class="fas fa-plus-square step-icon"></i>
+                    </div>
+                </div>
+                <div class="instruction-step">
+                    <div class="step-number">٣</div>
+                    <div class="step-text">
+                        <p>کلیک لە <strong>"Add"</strong> بکە</p>
+                        <i class="fas fa-check-circle step-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <p class="instruction-note">
+                <i class="fas fa-info-circle"></i>
+                تێبینی: تەنها لە بڕاوزەری <strong>Safari</strong> کار دەکات
+            </p>
+            <button class="got-it-btn" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-thumbs-up"></i>
+                تێگەیشتم
+            </button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function checkInstallPrompt() {
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('App already installed');
+        return;
+    }
+    
+    // Check if dismissed recently (7 days)
+    const lastShown = localStorage.getItem('install-prompt-shown');
+    if (lastShown) {
+        const daysSince = (Date.now() - lastShown) / (1000 * 60 * 60 * 24);
+        if (daysSince < 7) {
+            console.log('Install prompt shown recently');
+            return;
+        }
+    }
+    
+    // Show prompt
+    setTimeout(() => {
+        document.getElementById('install-prompt').classList.add('show');
+    }, 1000);
+}
+
+function hideInstallPrompt() {
+    document.getElementById('install-prompt').classList.remove('show');
+}
+
+function showIOSInstallInstructions() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    if (isIOS) {
+        showNotification('لە Safari، کلیک لە Share بکە و "Add to Home Screen" هەڵبژێرە', 'info');
+    } else {
+        showNotification('لە مێنیوی بڕاوزەرەکەت "Add to Home Screen" هەڵبژێرە', 'info');
+    }
+}
+
 
 // ========== Settings ==========
 function loadSettings() {
@@ -59,7 +273,7 @@ function setupSettings() {
         settings.darkMode = e.target.checked;
         document.body.classList.toggle('dark-mode', e.target.checked);
         saveSettings();
-        showNotification(e.target.checked ? '🌙 دۆخی تاریک چالاککرا' : '☀️ دۆخی ڕۆشنایی چالاککرا', 'success');
+        showNotification(e.target.checked ? 'دۆخی تاریک چالاککرا' : 'دۆخی ڕۆشنایی چالاککرا', 'success');
     });
     
     // Sound Toggle
@@ -69,7 +283,7 @@ function setupSettings() {
         if (e.target.checked) {
             playSound('success');
         }
-        showNotification(e.target.checked ? '🔊 دەنگ چالاککرا' : '🔇 دەنگ ناچالاککرا', 'success');
+        showNotification(e.target.checked ? 'دەنگ چالاککرا' : 'دەنگ ناچالاککرا', 'success');
     });
     
     // Theme Color
@@ -84,7 +298,7 @@ function setupSettings() {
             document.documentElement.style.setProperty('--primary', color);
             
             saveSettings();
-            showNotification('🎨 ڕەنگ گۆڕدرا', 'success');
+            showNotification('ڕەنگ گۆڕدرا', 'success');
         });
         
         if (btn.getAttribute('data-color') === settings.themeColor) {
@@ -110,7 +324,7 @@ function setupSettings() {
             };
             applySettings();
             updateStatsDisplay();
-            showNotification('🗑️ هەموو داتاکان سڕانەوە', 'success');
+            showNotification('هەموو داتاکان سڕانەوە', 'success');
         }
     });
 }
@@ -373,13 +587,13 @@ function selectOption(selected, allOptions, question) {
             selected.classList.add('correct');
             stats.correct++;
             playSound('success');
-            showNotification('✅ وەڵامی ڕاست!', 'success');
+            showNotification('وەڵامی ڕاست!', 'success');
         } else {
             selected.classList.add('wrong');
             allOptions[question.correct].classList.add('correct');
             stats.wrong++;
             playSound('error');
-            showNotification('❌ وەڵامی هەڵە!', 'error');
+            showNotification('وەڵامی هەڵە!', 'error');
         }
         
         stats.total++;
@@ -446,7 +660,7 @@ function showReviewScreen() {
         </div>
         <div class="review-actions">
             <button onclick="showFinalResults()" class="action-btn primary" style="width: 100%;">
-                بینینی ئەنجامی کۆتایی <i class="fas fa-arrow-left"></i>
+                <span style="font-family: UniSIRWAN Qabas">بینینی ئەنجامی کۆتایی</span> </span><i class="fas fa-arrow-left"></i>
             </button>
         </div>
     `;
@@ -576,7 +790,7 @@ function showFinalResults() {
                 </div>
             </div>
             <button onclick="restartQuiz()" style="margin-top: 30px; padding: 14px 32px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer;">
-                دەستپێکردنەوە <i class="fas fa-rotate-right"></i>
+                <span style="font-family: UniSIRWAN Qabas">دەستپێکردنەوە</span></span> <i class="fas fa-rotate-right"></i>
             </button>
         </div>
     `;
