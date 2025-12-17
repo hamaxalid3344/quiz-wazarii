@@ -155,30 +155,80 @@
                         </div>
                     </div>
 
-                    <!-- Quiz Settings -->
-                    <div class="setting-card">
-                        <div class="setting-title">
-                            <i class="fas fa-sliders"></i>
-                            <span>ڕێکخستنی کوێز</span>
-                        </div>
-                        <div class="quiz-settings">
-                            <label>ژمارەی پرسیار:</label>
-                            <select id="questions-count" class="setting-select">
-                                <option value="5">٥ پرسیار</option>
-                                <option value="10" selected>١٠ پرسیار</option>
-                                <option value="20">٢٠ پرسیار</option>
-                                <option value="all">هەموو پرسیارەکان</option>
-                            </select>
-                            
-                            <label>کاتی چوونە پرسیاری داهاتوو:</label>
-                            <select id="auto-next-time" class="setting-select">
-                                <option value="1000">١ چرکە</option>
-                                <option value="1500" selected>١.٥ چرکە</option>
-                                <option value="2000">٢ چرکە</option>
-                                <option value="3000">٣ چرکە</option>
-                            </select>
-                        </div>
+                    <!-- Quiz Settings - Custom Dropdown -->
+<div class="setting-card">
+    <div class="setting-title">
+        <i class="fas fa-sliders"></i>
+        <span>ڕێکخستنی کوێز</span>
+    </div>
+    <div class="quiz-settings">
+        
+        <!-- Questions Count -->
+        <div class="quiz-setting-item">
+            <label>
+                <i class="fas fa-list-ol"></i>
+                ژمارەی پرسیار
+            </label>
+            <div class="custom-select-setting" id="questions-count-select">
+                <div class="select-trigger-setting">
+                    <span class="select-value">١٠ پرسیار</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="select-options-setting">
+                    <div class="option-setting" data-value="5">
+                        <i class="fas fa-check-circle"></i>
+                        <span>٥ پرسیار</span>
                     </div>
+                    <div class="option-setting active" data-value="10">
+                        <i class="fas fa-check-circle"></i>
+                        <span>١٠ پرسیار</span>
+                    </div>
+                    <div class="option-setting" data-value="20">
+                        <i class="fas fa-check-circle"></i>
+                        <span>٢٠ پرسیار</span>
+                    </div>
+                    <div class="option-setting" data-value="all">
+                        <i class="fas fa-check-circle"></i>
+                        <span>هەموو پرسیارەکان</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Auto Next Time -->
+        <div class="quiz-setting-item">
+            <label>
+                <i class="fas fa-clock"></i>
+                کاتی چوونە پرسیاری داهاتوو
+            </label>
+            <div class="custom-select-setting" id="auto-next-select">
+                <div class="select-trigger-setting">
+                    <span class="select-value">١.٥ چرکە</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="select-options-setting">
+                    <div class="option-setting" data-value="1000">
+                        <i class="fas fa-check-circle"></i>
+                        <span>١ چرکە</span>
+                    </div>
+                    <div class="option-setting active" data-value="1500">
+                        <i class="fas fa-check-circle"></i>
+                        <span>١.٥ چرکە</span>
+                    </div>
+                    <div class="option-setting" data-value="2000">
+                        <i class="fas fa-check-circle"></i>
+                        <span>٢ چرکە</span>
+                    </div>
+                    <div class="option-setting" data-value="3000">
+                        <i class="fas fa-check-circle"></i>
+                        <span>٣ چرکە</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
 
                     <!-- Clear Data -->
                     <div class="setting-card">
