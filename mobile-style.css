@@ -343,7 +343,7 @@ body.dark-mode .select-option.active {
     margin-bottom: 20px;
     padding: 4px;
     background: white;
-    border-radius: 30px;
+    border-radius: 20px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
