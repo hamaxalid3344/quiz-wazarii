@@ -473,37 +473,7 @@ function closeSideMenu() {
     document.getElementById('overlay').classList.remove('active');
 }
 
-// ========== Load PDFs ==========
-function loadPDFs() {
-    const container = document.getElementById('pdf-cards');
-    container.innerHTML = '';
-    
-    pdfFiles.forEach(pdf => {
-        const card = document.createElement('div');
-        card.className = 'pdf-card';
-        card.setAttribute('data-year', pdf.year);
-        card.setAttribute('data-term', pdf.term);
-        
-        card.innerHTML = `
-            <div class="pdf-card-icon">
-                <i class="fas fa-file-pdf"></i>
-            </div>
-            <div class="pdf-card-content">
-                <div class="pdf-card-title">${pdf.title}</div>
-                <div class="pdf-card-meta">
-                    <span><i class="fas fa-calendar"></i> ${pdf.year}</span>
-                    <span><i class="fas fa-book"></i> ${pdf.term}</span>
-                </div>
-            </div>
-        `;
-        
-        card.addEventListener('click', () => window.open(pdf.url, '_blank'));
-        container.appendChild(card);
-    });
-    
-    document.getElementById('year-select').addEventListener('change', filterPDFs);
-    document.getElementById('term-select').addEventListener('change', filterPDFs);
-}
+
 
 function filterPDFs() {
     const year = document.getElementById('year-select').value;
@@ -632,7 +602,7 @@ function showReviewScreen() {
     quizData.forEach((q, index) => {
         const userAnswer = userAnswers[index];
         const isCorrect = userAnswer === q.correct;
-        const icon = isCorrect ? '✅' : '❌';
+        const icon = isCorrect ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-xmark"></i>';
         const statusClass = isCorrect ? 'correct-item' : 'wrong-item';
         
         reviewHTML += `
@@ -981,11 +951,64 @@ function loadPDFs() {
             </div>
         `;
         
-        card.addEventListener('click', () => window.open(pdf.url, '_blank'));
+        // ←←← گۆڕدراوە - لە ناو ئەپ بکەرەوە ←←←
+        card.addEventListener('click', () => openPDFViewer(pdf));
+        
         container.appendChild(card);
     });
+}
+
+// ========== PDF Viewer ==========
+function openPDFViewer(pdf) {
+    // Create PDF viewer overlay
+    const viewer = document.createElement('div');
+    viewer.className = 'pdf-viewer';
+    viewer.innerHTML = `
+        <div class="pdf-viewer-header">
+            <button class="pdf-close-btn" id="pdf-close-btn" style="font-family: UniSIRWAN Qabas">
+                <i class="fa-solid fa-chevron-right"></i>
+                گەڕانەوە
+            </button>
+            <h3 class="pdf-viewer-title">${pdf.title}</h3>
+        </div>
+        <div class="pdf-viewer-content">
+            <iframe 
+                src="${pdf.url}" 
+                class="pdf-iframe"
+                frameborder="0"
+            ></iframe>
+        </div>
+    `;
     
-    // ئەم دوو لاینە بسڕەوە:
-    // document.getElementById('year-select').addEventListener('change', filterPDFs);
-    // document.getElementById('term-select').addEventListener('change', filterPDFs);
+    document.body.appendChild(viewer);
+    
+    // Add to body class for styling
+    document.body.classList.add('pdf-viewing');
+    
+    // Close button
+    document.getElementById('pdf-close-btn').addEventListener('click', () => {
+        closePDFViewer();
+    });
+    
+    // Close on escape
+    document.addEventListener('keydown', handleEscapeKey);
+}
+
+
+function closePDFViewer() {
+    const viewer = document.querySelector('.pdf-viewer');
+    if (viewer) {
+        viewer.classList.add('closing');
+        setTimeout(() => {
+            viewer.remove();
+            document.body.classList.remove('pdf-viewing');
+            document.removeEventListener('keydown', handleEscapeKey);
+        }, 300);
+    }
+}
+
+function handleEscapeKey(e) {
+    if (e.key === 'Escape') {
+        closePDFViewer();
+    }
 }

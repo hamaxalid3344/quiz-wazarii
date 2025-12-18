@@ -2014,3 +2014,137 @@ body.dark-mode .ios-instructions .device-icon {
         transform: translateY(0) scale(1);
     }
 }
+
+
+/* ========== PDF Viewer ========== */
+.pdf-viewer {
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    animation: slideInFromRight 0.3s ease;
+}
+
+.pdf-viewer.closing {
+    animation: slideOutToRight 0.3s ease;
+}
+
+.pdf-viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+}
+
+.pdf-close-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pdf-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.pdf-viewer-title {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pdf-external-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pdf-external-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.pdf-viewer-content {
+    flex: 1;
+    position: relative;
+    background: var(--bg-elevated);
+    overflow: hidden;
+}
+
+.pdf-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+/* Animations */
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+/* Hide bottom nav when viewing PDF */
+body.pdf-viewing .bottom-nav {
+    transform: translateY(100%);
+}
+
+body.pdf-viewing .app-container {
+    overflow: hidden;
+}
+
+/* Dark Mode */
+body.dark-mode .pdf-viewer {
+    background: var(--bg-main);
+}
+
+body.dark-mode .pdf-viewer-content {
+    background: var(--bg-card);
+}
+
+body.dark-mode .pdf-iframe {
+    background: var(--bg-elevated);
+}
