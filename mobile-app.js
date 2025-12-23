@@ -273,7 +273,6 @@ function setupSettings() {
         settings.darkMode = e.target.checked;
         document.body.classList.toggle('dark-mode', e.target.checked);
         saveSettings();
-        showNotification(e.target.checked ? 'دۆخی تاریک چالاککرا' : 'دۆخی ڕۆشنایی چالاککرا', 'success');
     });
     
     // Sound Toggle
@@ -283,7 +282,6 @@ function setupSettings() {
         if (e.target.checked) {
             playSound('success');
         }
-        showNotification(e.target.checked ? 'دەنگ چالاککرا' : 'دەنگ ناچالاککرا', 'success');
     });
     
     // Theme Color
@@ -298,7 +296,6 @@ function setupSettings() {
             document.documentElement.style.setProperty('--primary', color);
             
             saveSettings();
-            showNotification('ڕەنگ گۆڕدرا', 'success');
         });
         
         if (btn.getAttribute('data-color') === settings.themeColor) {
