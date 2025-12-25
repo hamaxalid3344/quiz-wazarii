@@ -473,18 +473,39 @@ function closeSideMenu() {
 
 
 function filterPDFs() {
-    const year = document.getElementById('year-select').value;
-    const term = document.getElementById('term-select').value;
+    // وەرگرتنی بەهای هەڵبژێردراو لە هەر فلتەرێک
+    const getSelectedValue = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return '';
+        const active = el.querySelector('.select-option.active');
+        return active ? active.getAttribute('data-value') : '';
+    };
+
+    const yearVal = getSelectedValue('year-filter');
+    const termVal = getSelectedValue('term-filter');
+    const subjectVal = getSelectedValue('subject-filter');
+
     const cards = document.querySelectorAll('.pdf-card');
-    
+
     cards.forEach(card => {
-        const cardYear = card.getAttribute('data-year');
-        const cardTerm = card.getAttribute('data-term');
-        
-        const match = (!year || cardYear === year) && (!term || cardTerm === term);
-        card.style.display = match ? 'flex' : 'none';
+        const cYear = card.getAttribute('data-year');
+        const cTerm = card.getAttribute('data-term');
+        const cSubject = card.getAttribute('data-subject');
+
+        // مەرج: یان فلتەر بەتاڵە (هەموو)، یان یەکسانە
+        const matchYear = (yearVal === '' || cYear === yearVal);
+        const matchTerm = (termVal === '' || cTerm === termVal);
+        const matchSubject = (subjectVal === '' || cSubject === subjectVal);
+
+        if (matchYear && matchTerm && matchSubject) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
     });
 }
+
+
 
 // ========== Load Quiz ==========
 function loadQuiz() {
@@ -856,118 +877,163 @@ document.head.appendChild(style);
 
 // ========== Custom Select Dropdown ==========
 function setupCustomSelect() {
-    const customSelects = document.querySelectorAll('.custom-select');
-    
-    customSelects.forEach(select => {
-        const trigger = select.querySelector('.select-trigger');
-        const options = select.querySelectorAll('.select-option');
-        const textElement = select.querySelector('.select-text');
-        
-        // Open/Close dropdown
-        trigger.addEventListener('click', () => {
-            // Close other dropdowns
-            customSelects.forEach(s => {
-                if (s !== select) s.classList.remove('open');
+    const filters = ['year', 'term', 'subject'];
+
+    filters.forEach(id => {
+        const wrapper = document.getElementById(id + '-filter');
+        if (!wrapper) return; // ئەگەر نەبوو، وازی لێ بێنە
+
+        const trigger = wrapper.querySelector('.select-trigger');
+        const options = wrapper.querySelectorAll('.select-option');
+        const textLabel = wrapper.querySelector('.select-text');
+
+        // کردنەوە و داخستن
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // داخستنی ئەوانی تر
+            document.querySelectorAll('.custom-select').forEach(el => {
+                if (el !== wrapper) el.classList.remove('open');
             });
-            
-            select.classList.toggle('open');
+            wrapper.classList.toggle('open');
         });
-        
-        // Select option
-        options.forEach(option => {
-            option.addEventListener('click', () => {
-                const value = option.getAttribute('data-value');
-                const text = option.textContent;
+
+        // هەڵبژاردن
+        options.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
                 
-                // Update text
-                textElement.textContent = text;
+                // گۆڕینی دەق
+                textLabel.textContent = opt.textContent;
                 
-                // Update active state
-                options.forEach(opt => opt.classList.remove('active'));
-                option.classList.add('active');
+                // گۆڕینی کلاس
+                options.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
                 
-                // Close dropdown
-                select.classList.remove('open');
+                // داخستن
+                wrapper.classList.remove('open');
                 
-                // Trigger filter
+                // جێبەجێکردنی فلتەر
                 filterPDFs();
             });
         });
     });
-    
-    // Close on outside click
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.custom-select')) {
-            customSelects.forEach(select => select.classList.remove('open'));
+
+    // داخستن کاتێک کلیک لە دەرەوە دەکرێت
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
+    });
+}
+
+
+// گۆڕینی فانکشنی filterPDFs
+function filterPDFs() {
+    // ١. وەرگرتنی بەهاکان
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return '';
+        const active = el.querySelector('.select-option.active');
+        return active ? active.getAttribute('data-value') : '';
+    };
+
+    const yearVal = getVal('year-filter');
+    const termVal = getVal('term-filter');
+    const subjectVal = getVal('subject-filter'); // ← زیادکراو
+
+    // ٢. پشکنینی کارتەکان
+    document.querySelectorAll('.pdf-card').forEach(card => {
+        const cYear = card.getAttribute('data-year');
+        const cTerm = card.getAttribute('data-term');
+        const cSubject = card.getAttribute('data-subject'); // ← زیادکراو
+
+        // مەرجەکان
+        const matchYear = (yearVal === '' || cYear === yearVal);
+        const matchTerm = (termVal === '' || cTerm === termVal);
+        const matchSubject = (subjectVal === '' || cSubject === subjectVal); // ← زیادکراو
+
+        // ٣. نیشاندان یان شاردنەوە
+        if (matchYear && matchTerm && matchSubject) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
         }
     });
 }
 
-// گۆڕینی فانکشنی filterPDFs
-function filterPDFs() {
-    const yearSelect = document.querySelector('#year-filter .select-option.active');
-    const termSelect = document.querySelector('#term-filter .select-option.active');
-    
-    const yearValue = yearSelect ? yearSelect.getAttribute('data-value') : '';
-    const termValue = termSelect ? termSelect.getAttribute('data-value') : '';
-    
-    const cards = document.querySelectorAll('.pdf-card');
-    
-    cards.forEach(card => {
-        const cardYear = card.getAttribute('data-year');
-        const cardTerm = card.getAttribute('data-term');
-        
-        const match = (!yearValue || cardYear === yearValue) && 
-                      (!termValue || cardTerm === termValue);
-        
-        card.style.display = match ? 'flex' : 'none';
-    });
-}
 
 // فانکشنی loadPDFs ساکارەوە - دوو لایسەنەرەکە بسڕەوە:
 function loadPDFs() {
     const container = document.getElementById('pdf-cards');
+    if (!container) return;
     container.innerHTML = '';
     
+    // دڵنیابوونەوە لەوەی داتا هەیە
+    if (typeof pdfFiles === 'undefined' || !pdfFiles) {
+        console.log('pdfFiles not found');
+        return;
+    }
+
     pdfFiles.forEach(pdf => {
         const card = document.createElement('div');
         card.className = 'pdf-card';
-        card.setAttribute('data-year', pdf.year);
-        card.setAttribute('data-term', pdf.term);
         
+        // =============================================
+        // بەشی زیرەک: دۆزینەوەی وانە لە ناونیشانەکەوە
+        // =============================================
+        let autoSubject = pdf.subject ? pdf.subject.trim() : ''; 
+        
+        // ئەگەر خۆت نەتنووسیوە، لێرە لە ناونیشانەکە دەیدۆزێتەوە
+        if (!autoSubject && pdf.title) {
+            const t = pdf.title; 
+            if (t.includes('کوردی')) autoSubject = 'کوردی';
+            else if (t.includes('عەرەبی')) autoSubject = 'عەرەبی';
+            else if (t.includes('ئینگلیزی')) autoSubject = 'ئینگلیزی';
+            else if (t.includes('بیرکاری')) autoSubject = 'بیرکاری';
+            else if (t.includes('زیندەزانی')) autoSubject = 'زیندەزانی';
+            else if (t.includes('فیزیا')) autoSubject = 'فیزیا';
+            else if (t.includes('کیمیا')) autoSubject = 'کیمیا';
+        }
+        // =============================================
+
+        // دانانی داتا بۆ فلتەرکردن
+        card.setAttribute('data-year', pdf.year || '');
+        card.setAttribute('data-term', pdf.term || '');
+        card.setAttribute('data-subject', autoSubject); // ← لێرە وانە دۆزراوەکە دادەنێین
+        
+        // ناوەڕۆکی کارتەکە
         card.innerHTML = `
-            <div class="pdf-card-icon">
-                <i class="fas fa-file-pdf"></i>
-            </div>
+            <div class="pdf-card-icon"><i class="fas fa-file-pdf"></i></div>
             <div class="pdf-card-content">
                 <div class="pdf-card-title">${pdf.title}</div>
                 <div class="pdf-card-meta">
                     <span><i class="fas fa-calendar"></i> ${pdf.year}</span>
-                    <span><i class="fas fa-book"></i> ${pdf.term}</span>
+                    <span><i class="fas fa-layer-group"></i> ${pdf.term}</span>
+                    <span style="color:var(--primary); font-weight:bold;">
+                        <i class="fas fa-book"></i> ${autoSubject || 'گشتی'}
+                    </span>
                 </div>
             </div>
         `;
         
-        // ←←← گۆڕدراوە - لە ناو ئەپ بکەرەوە ←←←
         card.addEventListener('click', () => openPDFViewer(pdf));
-        
         container.appendChild(card);
     });
 }
 
-// ========== PDF Viewer ==========
+
+
+// ========== PDF Viewer (Iframe + Download Button) ==========
 function openPDFViewer(pdf) {
-    // Create PDF viewer overlay
     const viewer = document.createElement('div');
     viewer.className = 'pdf-viewer';
     viewer.innerHTML = `
         <div class="pdf-viewer-header">
-            <button class="pdf-close-btn" id="pdf-close-btn" style="font-family: UniSIRWAN Qabas">
-                <i class="fa-solid fa-chevron-right"></i>
-                گەڕانەوە
+            <button class="pdf-close-btn" id="pdf-close-btn">
+                <i class="fas fa-arrow-right"></i>
+                <span style="font-family: UniSIRWAN Qabas">گەڕانەوە</span>
             </button>
             <h3 class="pdf-viewer-title">${pdf.title}</h3>
         </div>
+        
         <div class="pdf-viewer-content">
             <iframe 
                 src="${pdf.url}" 
@@ -975,22 +1041,21 @@ function openPDFViewer(pdf) {
                 frameborder="0"
             ></iframe>
         </div>
+
+        <div class="pdf-viewer-footer">
+            <a href="${pdf.url}" download="${pdf.title}" class="pdf-download-btn" target="_blank">
+                <i class="fas fa-download"></i>
+                داگرتنی فایل
+            </a>
+        </div>
     `;
     
     document.body.appendChild(viewer);
-    
-    // Add to body class for styling
     document.body.classList.add('pdf-viewing');
-    
-    // Close button
-    document.getElementById('pdf-close-btn').addEventListener('click', () => {
-        closePDFViewer();
-    });
-    
-    // Close on escape
-    document.addEventListener('keydown', handleEscapeKey);
-}
 
+    // داخستن
+    document.getElementById('pdf-close-btn').addEventListener('click', closePDFViewer);
+}
 
 function closePDFViewer() {
     const viewer = document.querySelector('.pdf-viewer');
@@ -999,7 +1064,6 @@ function closePDFViewer() {
         setTimeout(() => {
             viewer.remove();
             document.body.classList.remove('pdf-viewing');
-            document.removeEventListener('keydown', handleEscapeKey);
         }, 300);
     }
 }

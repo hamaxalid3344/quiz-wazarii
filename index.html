@@ -50,13 +50,13 @@
             <!-- PDF Screen -->
             <div class="screen active" id="pdf-screen">
                 <!-- Filter Chips - Custom Dropdown -->
-<div class="filter-chips">
-    <!-- Year Filter -->
+
+                <div class="filter-chips">
+    <!-- فلتەری ساڵ -->
     <div class="custom-select" id="year-filter">
         <div class="select-trigger">
-            <i class="fas fa-calendar"></i>
             <span class="select-text">هەموو ساڵەکان</span>
-            <i class="fas fa-chevron-down select-arrow"></i>
+            <i class="fas fa-chevron-down"></i>
         </div>
         <div class="select-options">
             <div class="select-option active" data-value="">هەموو ساڵەکان</div>
@@ -66,12 +66,11 @@
         </div>
     </div>
     
-    <!-- Term Filter -->
+    <!-- فلتەری خول -->
     <div class="custom-select" id="term-filter">
         <div class="select-trigger">
-            <i class="fas fa-book"></i>
             <span class="select-text">هەموو خولەکان</span>
-            <i class="fas fa-chevron-down select-arrow"></i>
+            <i class="fas fa-chevron-down"></i>
         </div>
         <div class="select-options">
             <div class="select-option active" data-value="">هەموو خولەکان</div>
@@ -80,7 +79,26 @@
             <div class="select-option" data-value="بەرایی">بەرایی</div>
         </div>
     </div>
+
+    <!-- فلتەری وانە (زیادکراو) -->
+    <div class="custom-select" id="subject-filter">
+        <div class="select-trigger">
+            <span class="select-text">هەموو وانەکان</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="select-options">
+            <div class="select-option active" data-value="">هەموو وانەکان</div>
+            <div class="select-option" data-value="کوردی">کوردی</div>
+            <div class="select-option" data-value="عەرەبی">عەرەبی</div>
+            <div class="select-option" data-value="ئینگلیزی">ئینگلیزی</div>
+            <div class="select-option" data-value="بیرکاری">بیرکاری</div>
+            <div class="select-option" data-value="زیندەزانی">زیندەزانی</div>
+            <div class="select-option" data-value="فیزیا">فیزیا</div>
+            <div class="select-option" data-value="کیمیا">کیمیا</div>
+        </div>
+    </div>
 </div>
+
 
                 <div class="cards-container" id="pdf-cards"></div>
             </div>

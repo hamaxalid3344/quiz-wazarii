@@ -212,16 +212,27 @@ body {
     }
 }
 /* ========== Custom Select Dropdown ========== */
+/* Filter Chips Container */
 .filter-chips {
     display: flex;
-    gap: 12px;
+    gap: 10px; /* کەمێک بۆشاییمان کەمکردەوە بۆ موبایل */
     margin-bottom: 20px;
+    padding: 4px;
+    /* ئەم دێڕە گرنگە بۆ ئەوەی لیستەکە دەربکەوێت */
+    flex-wrap: wrap; 
+    /* دڵنیابوونەوە لەوەی هیچیان ناشاردرێتەوە */
+    overflow: visible; 
+}
+
+.filter-chips::-webkit-scrollbar {
+    display: none;
 }
 
 .custom-select {
-    flex: 1;
+    flex: 1 1 140px; /* ئەگەر شوێن نەبوو دەچێتە خوارەوە */
     position: relative;
     user-select: none;
+    min-width: 120px;
 }
 
 .select-trigger {
@@ -268,7 +279,7 @@ body {
     transform: rotate(180deg);
 }
 
-/* Options List */
+/* ڕێکخستنی لیستەکە */
 .select-options {
     position: absolute;
     top: calc(100% + 8px);
@@ -283,8 +294,8 @@ body {
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s ease;
-    max-height: 250px;
-    overflow-y: auto;
+    max-height: 250px; /* بەرزی دیاریکراو */
+    overflow-y: auto; /* سکڕۆڵ بۆ ناو لیستەکە */
 }
 
 .custom-select.open .select-options {
@@ -2100,7 +2111,50 @@ body.dark-mode .ios-instructions .device-icon {
     width: 100%;
     height: 100%;
     border: none;
+}
+
+/* Footer & Download Button */
+.pdf-viewer-footer {
+    flex-shrink: 0; /* خوارەوە بچووک نەبێتەوە */
+    padding: 16px;
     background: white;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: center;
+    z-index: 20;
+}
+
+.pdf-download-btn {
+    width: 100%;
+    max-width: 300px;
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+.pdf-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Dark Mode */
+body.dark-mode .pdf-viewer-footer {
+    background: var(--bg-card);
 }
 
 /* Animations */
