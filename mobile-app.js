@@ -966,40 +966,16 @@ function loadPDFs() {
     if (!container) return;
     container.innerHTML = '';
     
-    // دڵنیابوونەوە لەوەی داتا هەیە
-    if (typeof pdfFiles === 'undefined' || !pdfFiles) {
-        console.log('pdfFiles not found');
-        return;
-    }
+    if (typeof pdfFiles === 'undefined') return;
 
     pdfFiles.forEach(pdf => {
         const card = document.createElement('div');
         card.className = 'pdf-card';
-        
-        // =============================================
-        // بەشی زیرەک: دۆزینەوەی وانە لە ناونیشانەکەوە
-        // =============================================
-        let autoSubject = pdf.subject ? pdf.subject.trim() : ''; 
-        
-        // ئەگەر خۆت نەتنووسیوە، لێرە لە ناونیشانەکە دەیدۆزێتەوە
-        if (!autoSubject && pdf.title) {
-            const t = pdf.title; 
-            if (t.includes('کوردی')) autoSubject = 'کوردی';
-            else if (t.includes('عەرەبی')) autoSubject = 'عەرەبی';
-            else if (t.includes('ئینگلیزی')) autoSubject = 'ئینگلیزی';
-            else if (t.includes('بیرکاری')) autoSubject = 'بیرکاری';
-            else if (t.includes('زیندەزانی')) autoSubject = 'زیندەزانی';
-            else if (t.includes('فیزیا')) autoSubject = 'فیزیا';
-            else if (t.includes('کیمیا')) autoSubject = 'کیمیا';
-        }
-        // =============================================
-
-        // دانانی داتا بۆ فلتەرکردن
+        // دانانی داتا بۆ فلتەرکردن - دڵنیابە ئەمانە ڕاستن
         card.setAttribute('data-year', pdf.year || '');
         card.setAttribute('data-term', pdf.term || '');
-        card.setAttribute('data-subject', autoSubject); // ← لێرە وانە دۆزراوەکە دادەنێین
+        card.setAttribute('data-subject', pdf.subject || '');
         
-        // ناوەڕۆکی کارتەکە
         card.innerHTML = `
             <div class="pdf-card-icon"><i class="fas fa-file-pdf"></i></div>
             <div class="pdf-card-content">
@@ -1007,22 +983,29 @@ function loadPDFs() {
                 <div class="pdf-card-meta">
                     <span><i class="fas fa-calendar"></i> ${pdf.year}</span>
                     <span><i class="fas fa-layer-group"></i> ${pdf.term}</span>
-                    <span style="color:var(--primary); font-weight:bold;">
-                        <i class="fas fa-book"></i> ${autoSubject || 'گشتی'}
-                    </span>
+                    <span><i class="fas fa-book"></i> ${pdf.subject || 'گشتی'}</span>
                 </div>
             </div>
         `;
-        
         card.addEventListener('click', () => openPDFViewer(pdf));
         container.appendChild(card);
     });
 }
 
 
-
 // ========== PDF Viewer (Iframe + Download Button) ==========
 function openPDFViewer(pdf) {
+    // بەکارهێنانی Google Docs Viewer بۆ ئەوەی لە هەموو مۆبایلێک بکرێتەوە
+    const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(window.location.origin + '/' + pdf.url)}&embedded=true`;
+    
+    // تێبینی: ئەگەر لەسەر کۆمپیوتەری خۆت (Localhost) کار دەکەیت، Google Docs Viewer کار ناکات
+    // چونکە ناتوانێت دەستی بە فایلەکانی ناو کۆمپیوتەرەکەت بگات.
+    // بەڵام کە خستتە سەر سێرڤەر (وەک Vercel)، ئەوە بە باشی کار دەکات.
+    
+    // چارەسەری کاتی بۆ Localhost (ئەگەر URLـەکە http://localhost بێت):
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const finalUrl = isLocalhost ? pdf.url : viewerUrl;
+
     const viewer = document.createElement('div');
     viewer.className = 'pdf-viewer';
     viewer.innerHTML = `
@@ -1036,14 +1019,16 @@ function openPDFViewer(pdf) {
         
         <div class="pdf-viewer-content">
             <iframe 
-                src="${pdf.url}" 
+                src="${finalUrl}" 
                 class="pdf-iframe"
                 frameborder="0"
+                style="width:100%; height:100%;"
+                allow="autoplay"
             ></iframe>
         </div>
 
-        <div class="pdf-viewer-footer">
-            <a href="${pdf.url}" download="${pdf.title}" class="pdf-download-btn" target="_blank">
+        <div class="pdf-viewer-footer" style="padding: 10px; background: white; text-align: center;">
+            <a href="${pdf.url}" download="${pdf.title}" class="pdf-download-btn" target="_blank" style="display: inline-block; padding: 10px 20px; background: var(--primary); color: white; text-decoration: none; border-radius: 8px;">
                 <i class="fas fa-download"></i>
                 داگرتنی فایل
             </a>
@@ -1056,6 +1041,40 @@ function openPDFViewer(pdf) {
     // داخستن
     document.getElementById('pdf-close-btn').addEventListener('click', closePDFViewer);
 }
+
+// function openPDFViewer(pdf) {
+//     const viewer = document.createElement('div');
+//     viewer.className = 'pdf-viewer';
+//     viewer.innerHTML = `
+//         <div class="pdf-viewer-header">
+//             <button class="pdf-close-btn" id="pdf-close-btn">
+//                 <i class="fas fa-arrow-right"></i>
+//                 <span style="font-family: UniSIRWAN Qabas">گەڕانەوە</span>
+//             </button>
+//             <h3 class="pdf-viewer-title">${pdf.title}</h3>
+//         </div>
+        
+//         <div class="pdf-viewer-content">
+//             <iframe 
+//                 src="${pdf.url}" 
+//                 class="pdf-iframe"
+//                 frameborder="0"
+//             ></iframe>
+//         </div>
+
+//         <div class="pdf-viewer-footer">
+//             <a href="${pdf.url}" download="${pdf.title}" class="pdf-download-btn" target="_blank">
+//                 <i class="fas fa-download"></i>
+//                 داگرتنی فایل
+//             </a>
+//         </div>
+//     `;
+    
+//     document.body.appendChild(viewer);
+//     document.body.classList.add('pdf-viewing');
+
+//     document.getElementById('pdf-close-btn').addEventListener('click', closePDFViewer);
+// }
 
 function closePDFViewer() {
     const viewer = document.querySelector('.pdf-viewer');
